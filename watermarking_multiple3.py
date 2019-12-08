@@ -462,7 +462,7 @@ if __name__ == "__main__":
     cv2.destroyAllWindows()#close all previos window
     watermarkImage = cv2.imread('watermarkImage.JPG',0)
 
-    FuncName=['DWT', 'DCT', 'DFT', 'SVD', 'DWT_SVD', 'DWT_DCT_SVD', 'DWT_DFT_SVD']
+    FuncName=['DWT', 'DCT', 'DFT', 'SVD', 'DWT_SVD', 'DWT_DCT_SVD']
     options = {
         1: DWT,
         2: DCT,
