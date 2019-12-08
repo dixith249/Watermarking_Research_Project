@@ -12,6 +12,10 @@ Please install the below packages. They are:
   * Pillow==6.2.1
   * PyWavelets==1.1.1
   
+ ```
+Please read documentation for detailed understanding of implementations
+```
+  
   Using virtualenv allows you to avoid installing Python packages globally which could break system tools or other projects. It is already available in this.
   
 If you have any doubts or facing issues, please contact us
