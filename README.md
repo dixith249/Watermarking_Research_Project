@@ -16,7 +16,7 @@ Please install the below packages. They are:
 Please read documentation for detailed understanding of implementations
 ```
   
-  Using virtualenv allows you to avoid installing Python packages globally. (It is already available in this)
+  It is preferrable to use virtualenv which allows you to avoid installing Python packages globally. (It is already available in this)
   
 If you have any doubts or facing issues, please contact us
   
