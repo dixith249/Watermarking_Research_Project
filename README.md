@@ -23,6 +23,6 @@ Please read documentation for detailed understanding of implementations
   
 If you have any doubts or facing issues, please contact us
   
-  * Thrivikram (thrivikramlycan@gmail.com)
+  * Thrivikram Gujarathi (thrivikramlycan@gmail.com)
   * Arup Mazumder (arupseu@gmail.com)
   
