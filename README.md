@@ -18,6 +18,9 @@ Please read documentation for detailed understanding of implementations
   
   It is preferrable to use virtualenv which allows you to avoid installing Python packages globally. (It is already available in this)
   
+  
+  ![](video.gif)
+  
 If you have any doubts or facing issues, please contact us
   
   * Thrivikram (thrivikramlycan@gmail.com)
