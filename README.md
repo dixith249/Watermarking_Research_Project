@@ -21,6 +21,13 @@ Please read documentation for detailed understanding of implementations
   
   ![](readmegif.gif)
   
+  
+## Features
+1. Different watermarking system implementation
+2. Perform attacks
+3. Measure efficiency by calculating PSNR
+
+  
 If you have any doubts or facing issues, please contact us
   
   * Thrivikram Gujarathi (thrivikramlycan@gmail.com)
