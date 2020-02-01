@@ -5,29 +5,32 @@ import glob
 from PIL import Image
 import copy
 import random
+import math
+from matplotlib import pyplot as plt
 
 def mse(I1, I2):
-    #[H, W] = np.shape(I1)
-    ##NH=H*W
-    #total=0
-    #for i in range(0,H):
-    #    for j in range(0,W):
-    #        p1=I1[i][j]
-    #        p2=I2[i][j]
-    #        diff=p1-p2
-    #        diff_sqd=diff*diff
-    #        total=total+diff_sqd
-    #print('total='+str(total))
-    #err=total/NH
     err=np.square(np.subtract(np.double(I1), np.double(I2))).mean()
     return err
-
+def psnr(img1, img2):
+    mseval=mse(img1,img2)
+    if mse == 0:
+        return 100
+    PIXEL_MAX = 255.0
+    return 20 * math.log10(PIXEL_MAX / math.sqrt(mseval))
 
 def halt():
     k = 0
     while k != 48:
        k = cv2.waitKey(100)
     cv2.destroyAllWindows()
+
+def Save_Image(Location,Title,FName2,image_array):
+    fn=Title+FName2
+    img = Image.fromarray(image_array)
+    Floc=Location+fn
+    img.save(Floc)  # save image at location
+    print('Image Saved at: ' + Floc)
+    return
 
 def DFT(coverImage, watermarkImage):
     H,W=np.shape(coverImage)# find size of cover image
@@ -49,8 +52,11 @@ def DFT(coverImage, watermarkImage):
     watermarkedImage = np.uint8(255 * watermarkedImage)  # convert to 0,255 range
     coverImage2=copy.deepcopy(coverImage)
     coverImage2=np.uint8(255*coverImage)
+
     MSE=mse(coverImage2,watermarkedImage)
     print('MSE (coverimage, watermarked)='+str(MSE))
+    PSNR=psnr(coverImage2,watermarkedImage)
+    print('PSNR (coverimage, watermarked)=' + str(PSNR))
 
     #save watermarked image
     fn='DFT_Watermarked_'+FName#set file name
@@ -73,8 +79,11 @@ def DFT(coverImage, watermarkImage):
     ## calculate MSE
     watermarkImage2=copy.deepcopy(watermarkImage)
     watermarkImage2=np.uint8(255*watermarkImage2)
+
     MSE=mse(watermarkImage2,watermarkR)
-    #print('MSE (watermark, extracted watermark)='+str(MSE))
+    print('MSE (watermark, extracted watermark)='+str(MSE))
+    PSNR=psnr(watermarkImage2,watermarkR)
+    print('PSNR (watermark, extracted watermark)=' + str(PSNR))
 
     #save extracted watermark image
     fn='DFT_Extracted_Watermark_'+FName#set file name
@@ -83,7 +92,35 @@ def DFT(coverImage, watermarkImage):
     img = Image.fromarray(watermarkR)
     Floc='./result/DFT/'+fn#set file path+file name
     img.save(Floc)#save image at location
-    #print('Extracted Watermark Image saved at: '+Floc)
+    print('Extracted Watermark Image saved at: '+Floc)
+    return
+
+def DWT_Encoding(coverImage,watermarkImage,alpha):
+    coeffC = pywt.dwt2(coverImage, 'haar')
+    cA, (cH, cV, cD) = coeffC
+
+    #Embedding
+    coeffW = (cA + alpha*watermarkImage, (cH, cV, cD))
+    # Apply inverse DWT
+    watermarkedImage = pywt.idwt2(coeffW, 'haar')
+        
+    watermarkedImage=np.uint8(255*watermarkedImage)
+    coverImage=np.uint8(255*coverImage)
+    print("Embedding Watermark done..")
+    cv2.imshow('DWT Watermarked Image: '+FName, watermarkedImage)
+
+    return(watermarkedImage,cA)
+
+def DWT_Decoding(twatermarkedImage,alpha,cA):
+    #Extraction
+    twatermarkedImage=twatermarkedImage/255
+    coeffWM = pywt.dwt2(twatermarkedImage, 'haar')
+    hA, (hH, hV, hD) = coeffWM
+
+    textracted = (hA-cA)/alpha
+    textracted = np.uint8(255*textracted)
+
+    return(textracted)
 
 def DWT(coverImage, watermarkImage):
     coverImage = cv2.resize(coverImage,(300,300))
@@ -94,72 +131,26 @@ def DWT(coverImage, watermarkImage):
     #DWT on cover image
     coverImage =  np.float32(coverImage)
     coverImage /= 255
-    coeffC = pywt.dwt2(coverImage, 'haar')
-    cA, (cH, cV, cD) = coeffC
-    print("DWT of coverimage done")
+
     watermarkImage = np.float32(watermarkImage)
     watermarkImage /= 255
-
-    #Embedding
     alpha=0.1
-    coeffW = (cA + alpha*watermarkImage, (cH, cV, cD))
-    watermarkedImage = pywt.idwt2(coeffW, 'haar')
-    watermarkedImage=np.uint8(255*watermarkedImage)
-    coverImage=np.uint8(255*coverImage)
-    print("Embedding Watermark done..")
-    cv2.imshow('Watermarked Image: '+FName, watermarkedImage)
+    ## ENCODING DWT
+    watermarkedImage,cA=DWT_Encoding(coverImage,watermarkImage,alpha)
 
-    ## calculate MSE
-    coverImage2=copy.deepcopy(coverImage)
-    watermarkedImage2=copy.deepcopy(watermarkedImage)
-
-    coverImage2=np.uint8(255*coverImage2)
-    watermarkedImage2=np.uint8(255*watermarkedImage2)
-    MSE=mse(coverImage2,watermarkedImage2)
-    print('MSE (coverimage, watermarked)='+str(MSE))
+    MSE=mse(coverImage,watermarkedImage); print('MSE (coverimage, watermarked cover image)='+str(MSE))
+    PSNR=psnr(coverImage,watermarkedImage); print('PSNR (coverimage, watermarked cover image)=' + str(PSNR))
 
     # save watermarked image
-    fn = 'DWT_Watermarked_' + FName  # set file name
-    cv2.imshow('DWT_Watermarked_' + FName, watermarkedImage)
+    Save_Image('./result/DWT/', 'DWT_Watermarked_',FName, watermarkedImage)
 
-    img = Image.fromarray(watermarkedImage)
-    Floc = './result/DWT/' + fn  # set file path+file name
-    img.save(Floc)  # save image at location
-    print('Watermarked Image displayed and saved at:' + Floc)
-
-    #Extraction
-    watermarkedImage=watermarkedImage/255
-    print("Extraction watermarking start...")
-    coeffWM = pywt.dwt2(watermarkedImage, 'haar')
-    hA, (hH, hV, hD) = coeffWM
-
-    extracted = (hA-cA)/alpha
-    ## calculate MSE
-    watermarkImage2=copy.deepcopy(watermarkImage)
-    extracted2=copy.deepcopy(extracted)
-    watermarkImage2=np.uint8(255*watermarkImage)
-    extracted2=np.uint8(255*extracted)
-    MSE=mse(watermarkImage2,extracted2)
-    #print('MSE (watermark, extracted watermark)='+str(MSE))
-
-    extracted *= 255
-    extracted = np.uint8(extracted)
+    ## DECODING DWT WITHOUT NOISE
+    extracted=DWT_Decoding(watermarkedImage, alpha,cA)
+    cv2.imshow('Extracted Watermark ',extracted)
     print("Watermark Extracted...")
-    #cv2.imshow('Extracted', extracted)
-    watermarkedImage=255*watermarkedImage
-    watermarkedImage = np.uint8(watermarkedImage)
-
-    #save extracted watermark image
-    fn='DWT_Extracted_Watermark_'+FName#set file name
-    cv2.imshow('DWT_Extracted_Watermark_' + FName, extracted)
-
-    img = Image.fromarray(extracted)
-    Floc='./result/DWT/' +fn#set file path+file name
-    img.save( Floc)#save image at location
-    print('Extracted Watermark Image displayed and saved at:'+Floc)
-
-
-
+    MSE=mse(watermarkImage,extracted); print('MSE (watermark, extracted watermark)='+str(MSE))
+    PSNR=psnr(watermarkImage,extracted); print('PSNR (watermark, extracted watermark)=' + str(PSNR))
+    Save_Image('./result/DWT/', 'DWT_Extracted_Watermark', FName, extracted)
     return watermarkedImage
 
 def DCT(I, Imask):
@@ -261,6 +252,8 @@ def DCT(I, Imask):
     #MSE = np.square(np.subtract(np.double(I),np.double(Iw))).mean()
     MSE=mse(I,Iw)
     print('MSE (coverimage, watermarked cover image)='+str(MSE))
+    PSNR=psnr(I,Iw)
+    print('PSNR (coverimage, watermarked cover image)=' + str(PSNR))
 
     # save watermarked image
     img = Image.fromarray(Iw)
@@ -314,7 +307,9 @@ def DCT(I, Imask):
     Imask2=np.uint8(255*Imask)
     Imru2=np.uint8(255*Imru)
     MSE=mse(Imask2,Imru2)
-    #print('MSE (watermark , extracted watermarked)='+str(MSE))
+    print('MSE (watermark , extracted watermarked)='+str(MSE))
+    PSNR = psnr(Imask2,Imru2)
+    print('PSNR (watermark , extracted watermarked)=' + str(PSNR))
 
     Imru=np.uint8(255*Imru)
 
@@ -356,6 +351,8 @@ def SVD(coverImage, watermarkImage):
 
     err=mse(coverImage,watermarkedImage)# calculate mse
     print('MSE (cover, watermarked)='+str(err))
+    PSNR=psnr(coverImage,watermarkedImage)
+    print('PSNR (cover, watermarked)=' + str(PSNR))
 
     #save watermarked image
     watermarkedImage=np.uint8(watermarkedImage)
@@ -388,7 +385,9 @@ def SVD(coverImage, watermarkImage):
     print('Extracted Watermark Image saved at:'+Floc)
 
     err=mse(watermarkImage,Watermark2)
-    #print('MSE (watermark, extracted watermark )= '+str(err))
+    print('MSE (watermark, extracted watermark )= '+str(err))
+    PSNR = psnr(watermarkImage,Watermark2)
+    print('PSNR (watermark, extracted watermark )=' + str(PSNR))
 
     return
 
@@ -434,7 +433,9 @@ def DWT_SVD(coverImage, watermarkImage):
     #CALCULATE MSE
     err=mse(coverImage,watermarkedImage)
     print('MSE (cover image, watermarked image)=',err)
-   
+    PSNR=psnr(coverImage,watermarkedImage)
+    print('PSNR (cover image, watermarked image)=' + str(PSNR))
+
     # save watermarked image
     img = Image.fromarray(watermarkedImage)
     fn = 'DWTSVD_Watermarked_' + FName  # set file name
@@ -457,8 +458,11 @@ def DWT_SVD(coverImage, watermarkImage):
     Watermark2 = cv2.threshold(Watermark2, 127, 255, cv2.THRESH_BINARY)[1]
     Watermark2 = np.uint8(Watermark2)
     cv2.imshow('Extracted Watermark: '+FName,Watermark2)
+
     err=mse(watermarkImage,Watermark2)
     print('MSE (cover image, watermarked image)=',err)
+    PSNR=psnr(watermarkImage,Watermark2)
+    print('PSNR (cover image, watermarked image)=' + str(PSNR))
 
     # save extracted watermark image
     img = Image.fromarray(Watermark2)
@@ -466,7 +470,6 @@ def DWT_SVD(coverImage, watermarkImage):
     Floc='./result/DWT_SVD/' +fn#set file path+file name
     img.save( Floc)#save image at location
     print('Extracted Watermark Image saved at:'+Floc)
-    
     return watermarkedImage
 
 #Option 6
@@ -559,6 +562,8 @@ def DWT_DCT_SVD(coverImage, watermarkImage):
     # CALCULATE MSE
     MSE=mse(coverImage,watermarkedImage)
     print('MSE (coverimage, watermarked)='+str(MSE))
+    PSNR=psnr(coverImage,watermarkedImage)
+    print('PSNR (coverimage, watermarked)=' + str(PSNR))
 
     img = Image.fromarray(watermarkedImage)
     Floc='./result/DWTDCTSVD/' +fn#set file path+file name
@@ -569,7 +574,7 @@ def DWT_DCT_SVD(coverImage, watermarkImage):
     print('****Watermark Extraction******')
     coeffC = pywt.dwt2(watermarkedImage, 'haar')
     Da, (Dh,Dv,Dd) = coeffC
-    print('dwt applied on image')
+    print('dwt aaplied on image')
 
     # Extract DCT
     DMatD=np.zeros((Bh, Bw),  np.float32)
@@ -609,7 +614,9 @@ def DWT_DCT_SVD(coverImage, watermarkImage):
 
     # CALCULATE MSE
     MSE=mse(watermarkImage,WatermarkR)
-    #print('MSE (watermark, extracted watermark)='+str(MSE))
+    print('MSE (watermark, extracted watermark)='+str(MSE))
+    PSNR=psnr(watermarkImage,WatermarkR)
+    print('PSNR (watermark, extracted watermark)=' + str(PSNR))
 
     #save Extracted watermarked image
     FileName=s[0:len(s)-4]
@@ -621,54 +628,30 @@ def DWT_DCT_SVD(coverImage, watermarkImage):
 
     return
 
-def DWT_DFT_SVD(coverImage, watermarkImage):
-    coverImage = cv2.resize(coverImage,(512,512))
-    cv2.imshow('Cover Image',coverImage)
-    watermarkImage = cv2.resize(watermarkImage,(256,256))
-    cv2.imshow('Watermark Image',watermarkImage)
-    coverImage = np.float32(coverImage)
+#option 7
+def ALL_RUN(coverImage, watermarkImage):
+    print("All Test Run")
+    print("1. -------------DWT WATERMARKING --------")
+    DWT(coverImage, watermarkImage)
+    print("\n\n2. -------------DCT WATERMARKING --------")
+    I=coverImage;Imask=watermarkImage
+    DCT(I, Imask)
+    print("\n\n3. -------------DCT WATERMARKING --------")
+    DFT(coverImage, watermarkImage)
+    print("\n\n4. -------SVD WATERMARKING-----------")
+    SVD(coverImage, watermarkImage)
+    print("\n\n5. -------DWT_SVD WATERMARKING-----------")
+    DWT_SVD(coverImage, watermarkImage)
+    print("\n\n6. -------DWT_DCT_SVD WATERMARKING-----------")
+    DWT_DCT_SVD(coverImage, watermarkImage)
+    exit()
 
-    coverImage /= 255
-    coeff = pywt.dwt2(coverImage, 'haar')
-    cA, (cH, cV, cD) = coeff
+if __name__ ==  "__main__":
 
-    watermarkImage = np.float32(watermarkImage)
-    watermarkImage_dct = cv2.dct(watermarkImage)
-
-    cA_dft = cv2.dft(cA)
-
-    UcA_dct,ScA_dct,VcA_dct=np.linalg.svd(cA_dft,full_matrices=1,compute_uv=1)
-    uw,sw,vw=np.linalg.svd(watermarkImage,full_matrices=1,compute_uv=1)
-
-    #Embedding
-    alpha=0.1
-    sA=np.zeros((256,256),np.uint8)
-    sA[:256,:256]=np.diag(ScA_dct)
-    sW=np.zeros((256,256),np.uint8)
-    sW[:256,:256]=np.diag(sW)
-    W=sA+alpha*sW
-
-    u1,w1,v1=np.linalg.svd(W,full_matrices=1,compute_uv=1)
-    ww=np.zeros((256,256),np.uint8)
-    ww[:256,:256]=np.diag(w1)
-    Wmodi=np.matmul(UcA_dct,np.matmul(ww,VcA_dct))
-
-    widct= cv2.idct(Wmodi)
-    watermarkedImage=pywt.idwt2((widct,(cH,cV,cD)),'haar')
-    cv2.imshow('watermarkedImage',watermarkedImage)
-    #return watermarkedImage
-
-if __name__ == "__main__":
-
-    cv2.destroyAllWindows()#close all previos window
+    cv2.destroyAllWindows()#close all previous window
     watermarkImage = cv2.imread('watermarkImage.JPG',0)
-
     #cv2.imshow('Original Watermark Image', watermarkImage)
     FuncName=['DWT', 'DCT', 'DFT', 'SVD', 'DWT_SVD', 'DWT_DCT_SVD', 'DWT_DFT_SVD']
-
-
-    FuncName=['DWT', 'DCT', 'DFT', 'SVD', 'DWT_SVD', 'DWT_DCT_SVD']
-
     options = {
         1: DWT,
         2: DCT,
@@ -676,7 +659,7 @@ if __name__ == "__main__":
         4: SVD,
         5: DWT_SVD,
         6: DWT_DCT_SVD,
-        7: DWT_DFT_SVD
+        7: ALL_RUN
     }
 
     val = input('What type of embedding you want to perform? \
@@ -686,7 +669,7 @@ if __name__ == "__main__":
                 \n4.SVD\
                 \n5.DWT-SVD\
                 \n6.SVD-DCT-DWT\
-                \n7.SVD-DFT-DWT\
+                \n7.ALL_RUN\
                 \nEnter your option: ')
 
     watermarking_function = options.get(int(val), None)
@@ -709,14 +692,13 @@ if __name__ == "__main__":
             print('\n**----------------------------------------')
             print('Processing File:'+st)#print file name
             watermarking_function(coverImage,watermarkImage)
-
-
-
     else:
-        print("Invalid Option")
+        print("\n Invalid Option")
+        print("try once again :)")
         exit(1)
 
-    k = 0
-    while k != 48:
-       k = cv2.waitKey(100)
+    #k = 0
+    #while k != 48:
+     #  k = cv2.waitKey(100)
     cv2.destroyAllWindows()
+    exit()
