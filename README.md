@@ -23,9 +23,8 @@ Please read documentation for detailed understanding of implementations
   
   
 ## Features
-1. Different watermarking system implementation
-2. Perform attacks
-3. Measure efficiency by calculating PSNR
+Different watermarking systems implementation
+Measuring efficiency by calculating PSNR and MSE
 
   
 If you have any doubts or facing issues, please contact us
