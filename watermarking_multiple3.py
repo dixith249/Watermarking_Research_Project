@@ -144,15 +144,14 @@ def DWT(coverImage, watermarkImage):
     # save watermarked image
     Save_Image('./result/DWT/', 'DWT_Watermarked_',FName, watermarkedImage)
 
-    ## DECODING DWT WITHOUT NOISE
-    print("******* WITHOUT NOISE ---------")
+    ## DECODING DWT 
+    
     extracted=DWT_Decoding(watermarkedImage, alpha,cA)
     cv2.imshow('Extracted Watermark (without Noise)',extracted)
     print("Watermark Extracted...")
     MSE=mse(watermarkImage,extracted); print('MSE (watermark, extracted watermark)='+str(MSE))
     PSNR=psnr(watermarkImage,extracted); print('PSNR (watermark, extracted watermark)=' + str(PSNR))
-    Save_Image('./result/DWT/', 'DWT_Extracted_Watermark_WITHOUT_NOISE_', FName, extracted)
-
+    Save_Image('./result/DWT/', 'DWT_Extracted_Watermark', FName, extracted)
 
     return watermarkedImage
 
