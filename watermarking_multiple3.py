@@ -145,12 +145,15 @@ def DWT(coverImage, watermarkImage):
     Save_Image('./result/DWT/', 'DWT_Watermarked_',FName, watermarkedImage)
 
     ## DECODING DWT WITHOUT NOISE
+    print("******* WITHOUT NOISE ---------")
     extracted=DWT_Decoding(watermarkedImage, alpha,cA)
-    cv2.imshow('Extracted Watermark ',extracted)
+    cv2.imshow('Extracted Watermark (without Noise)',extracted)
     print("Watermark Extracted...")
     MSE=mse(watermarkImage,extracted); print('MSE (watermark, extracted watermark)='+str(MSE))
     PSNR=psnr(watermarkImage,extracted); print('PSNR (watermark, extracted watermark)=' + str(PSNR))
-    Save_Image('./result/DWT/', 'DWT_Extracted_Watermark', FName, extracted)
+    Save_Image('./result/DWT/', 'DWT_Extracted_Watermark_WITHOUT_NOISE_', FName, extracted)
+
+
     return watermarkedImage
 
 def DCT(I, Imask):
@@ -470,6 +473,7 @@ def DWT_SVD(coverImage, watermarkImage):
     Floc='./result/DWT_SVD/' +fn#set file path+file name
     img.save( Floc)#save image at location
     print('Extracted Watermark Image saved at:'+Floc)
+    
     return watermarkedImage
 
 #Option 6
@@ -644,11 +648,10 @@ def ALL_RUN(coverImage, watermarkImage):
     DWT_SVD(coverImage, watermarkImage)
     print("\n\n6. -------DWT_DCT_SVD WATERMARKING-----------")
     DWT_DCT_SVD(coverImage, watermarkImage)
-    exit()
 
-if __name__ ==  "__main__":
+if __name__ == "__main__":
 
-    cv2.destroyAllWindows()#close all previous window
+    cv2.destroyAllWindows()#close all previos window
     watermarkImage = cv2.imread('watermarkImage.JPG',0)
     #cv2.imshow('Original Watermark Image', watermarkImage)
     FuncName=['DWT', 'DCT', 'DFT', 'SVD', 'DWT_SVD', 'DWT_DCT_SVD', 'DWT_DFT_SVD']
@@ -693,12 +696,11 @@ if __name__ ==  "__main__":
             print('Processing File:'+st)#print file name
             watermarking_function(coverImage,watermarkImage)
     else:
-        print("\n Invalid Option")
-        print("try once again :)")
+        print("Invalid Option")
         exit(1)
-
-    #k = 0
-    #while k != 48:
-     #  k = cv2.waitKey(100)
+    
+    k = 0
+    while k != 48:
+       k = cv2.waitKey(100)
     cv2.destroyAllWindows()
-    exit()
+   
