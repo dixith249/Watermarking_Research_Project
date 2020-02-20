@@ -30,5 +30,6 @@ Measuring efficiency by calculating PSNR and MSE
 If you have any doubts or facing issues, please contact us
   
   * Thrivikram Gujarathi (thrivikramlycan@gmail.com)
+  * Siva Bathala (shivachowdary511@gmail.com)
   * Arup Mazumder (arupseu@gmail.com)
   
