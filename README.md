@@ -2,10 +2,11 @@
 
 ## How to run the program 
 
- ```
-python Embedding.py 
-python Extraction.py
-```
+
+For Embedding :  python Embedding.py 
+
+For Extraction:  python Extraction.py
+
 ## Install :
 
 pip install -r requirements.txt or pip3 install -r requirements.txt
